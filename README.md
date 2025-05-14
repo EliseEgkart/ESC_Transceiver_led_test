@@ -76,6 +76,7 @@ PWM 신호는 아두이노에서 `PinChangeInterrupt` 라이브러리를 이용�
 
 2. **조종기 설정**
    - AT9S 조종기에서 CH1, CH3, CH9을 PWM 출력 모드로 설정합니다.
+   - 트림 값에 불필요한 조작을 가하지 않습니다.
 
 3. **코드 업로드**
    - Arduino IDE 또는 PlatformIO를 사용해 제공된 `main.cpp`를 업로드합니다.
