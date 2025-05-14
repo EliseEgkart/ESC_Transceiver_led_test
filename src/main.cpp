@@ -117,29 +117,40 @@ void update_led1_brightness() {
 //─────────────────────────────────────────────────────────────
 // 채널 1 → RGB 색상 변경 함수 (PWM 기반 색상 선택)
 //─────────────────────────────────────────────────────────────
+// HSV → RGB 변환 함수
+void hsv_to_rgb(float h, float s, float v, int &r, int &g, int &b) {
+  float c = v * s;
+  float x = c * (1 - abs(fmod(h / 60.0, 2) - 1));
+  float m = v - c;
+
+  float r_, g_, b_;
+
+  if (h < 60)       { r_ = c; g_ = x; b_ = 0; }
+  else if (h < 120) { r_ = x; g_ = c; b_ = 0; }
+  else if (h < 180) { r_ = 0; g_ = c; b_ = x; }
+  else if (h < 240) { r_ = 0; g_ = x; b_ = c; }
+  else if (h < 300) { r_ = x; g_ = 0; b_ = c; }
+  else              { r_ = c; g_ = 0; b_ = x; }
+
+  r = (r_ + m) * 255;
+  g = (g_ + m) * 255;
+  b = (b_ + m) * 255;
+}
+
+// 채널 1 → 무지개 색상 매핑
 void update_rgb_color() {
-  if (!ch1.updated) return;  // 값이 갱신되지 않았으면 무시
+  if (!ch1.updated) return;
   ch1.updated = false;
 
-  // 초기화: 모든 색상을 먼저 꺼놓고 시작
-  red_val = green_val = blue_val = 0;
+  uint16_t pwm = constrain(ch1.pulse_width, CH3_PWM_INPUT_MIN, CH3_PWM_INPUT_MAX);
 
-  // PWM 값이 RED 영역이면 빨강 밝기 감소
-  if (ch1.pulse_width <= RED_MAX) {
-    red_val = map(ch1.pulse_width, PWM_MIN, RED_MAX, 255, 0);
-  }
-  // GREEN 영역이면 밝기 증가 → 감소로 분기
-  else if (ch1.pulse_width <= GREEN_MAX) {
-    green_val = (ch1.pulse_width <= PWM_NEUTRAL)
-                  ? map(ch1.pulse_width, GREEN_MIN, PWM_NEUTRAL, 0, 255)
-                  : map(ch1.pulse_width, PWM_NEUTRAL, GREEN_MAX, 255, 0);
-  }
-  // BLUE 영역이면 파란색 밝기 증가
-  else if (ch1.pulse_width <= PWM_MAX) {
-    blue_val = map(ch1.pulse_width, BLUE_MIN, PWM_MAX, 0, 255);
-  }
+  // 1068~1932 → Hue 0~300도 (Red → Purple)
+  float hue = map(pwm, CH3_PWM_INPUT_MIN, CH3_PWM_INPUT_MAX, 0, 300);  // HSV Hue: 0~300
+  float sat = 1.0;    // 채도 100%
+  float val = 1.0;    // 명도 100%
 
-  // PWM 출력 (0~255)
+  hsv_to_rgb(hue, sat, val, red_val, green_val, blue_val);
+
   analogWrite(RED_PIN,   constrain(red_val, 0, 255));
   analogWrite(GREEN_PIN, constrain(green_val, 0, 255));
   analogWrite(BLUE_PIN,  constrain(blue_val, 0, 255));
