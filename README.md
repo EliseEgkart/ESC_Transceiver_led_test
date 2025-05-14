@@ -1,15 +1,16 @@
 # 임베디드 통신시스템 프로젝트 - RC 조종기로 아두이노 LED 제어
 
 ## 시연 영상
-아래 링크를 통해 R9D 수신기와 AT9S 조종기를 사용한 LED 제어 프로젝트의 실제 동작 영상을 확인할 수 있습니다.
-
+아래 링크를 통해 R9D 수신기와 AT9S 조종기를 사용한 LED 제어 프로젝트의 실제 동작 영상을 확인할 수 있습니다.  
 [![Video Label](http://img.youtube.com/vi/wgoNXr9NGfQ/0.jpg)](https://youtu.be/wgoNXr9NGfQ)
+
+[3색 LED의 연속적 변화 기능을 추가한 새로운 시연영상](https://youtube.com/shorts/pGXUohaWYyQ)입니다. 시연에 해당하는 부분은 이 부분을 참고해주시면 감사하겠습니다.
 
 ---
 
 ## 개요
 본 프로젝트는 RC 조종기 **AT9S**와 수신기 **R9D**, 그리고 **Arduino Uno**를 이용해  
-3채널의 PWM 신호로 **LED ON/OFF 제어**, **밝기 조절**, **RGB 색상 변경**을 구현한 임베디드 제어 시스템입니다.
+3채널의 PWM 신호로 **LED ON/OFF 제어**, **밝기 조절**, **RGB 색상 연속 변경**을 구현한 임베디드 제어 시스템입니다.
 
 PWM 신호는 아두이노에서 `PinChangeInterrupt` 라이브러리를 이용해 측정되며,  
 아날로그 출력(PWM)을 통해 LED를 직관적으로 제어합니다.
@@ -55,8 +56,9 @@ PWM 신호는 아두이노에서 `PinChangeInterrupt` 라이브러리를 이용�
 
 - **PinChangeInterrupt** 라이브러리를 이용한 **PWM 신호 수신**
 - **채널 9**: PWM 값 > 1800일 때 LED2 ON / 이하일 때 OFF
-- **채널 3**: PWM 값 1068~1932μs 범위 → LED1 밝기 0~255로 선형 매핑
-- **채널 1**: PWM 값을 RED / GREEN / BLUE 영역으로 나누어 RGB LED 색상 변경
+- **채널 3**: PWM 값 1068-1932μs 범위 → LED1 밝기 0-255로 선형 매핑
+- **채널 1**: PWM 값을 Hue(색상 각도) 0-300도로 변환하여,  
+  RGB LED가 **빨강 → 초록 → 파랑**으로 부드럽고 연속적으로 색상이 전환되도록 구현됨
 
 ### 주요 파일 및 함수
 
@@ -65,7 +67,7 @@ PWM 신호는 아두이노에서 `PinChangeInterrupt` 라이브러리를 이용�
   - `loop()`: 각 채널 상태 업데이트 및 PWM 신호 처리  
   - `update_led2_onoff()`: CH9 스위치에 따른 LED ON/OFF  
   - `update_led1_brightness()`: CH3 조이스틱 위치 → 밝기 제어  
-  - `update_rgb_color()`: CH1 조이스틱 위치 → 색상 변경
+  - `update_rgb_color()`: CH1 조이스틱 위치 → **HSV 기반 RGB 색상 연속 변화**
 
 ---
 
@@ -99,7 +101,9 @@ PWM 신호는 아두이노에서 `PinChangeInterrupt` 라이브러리를 이용�
 
 - PWM 입력값이 수신기나 조종기 설정에 따라 약간 다를 수 있으므로,  
   코드 상단에 정의된 `CH3_PWM_INPUT_MIN`, `CH3_PWM_INPUT_MAX`는 실제 측정값 기준으로 조정해야 합니다.
-- RGB 색상은 PWM 값 범위를 3등분하여 각 구간에서만 하나의 색상이 출력되도록 설계되었습니다.
+- RGB 색상은 **PWM 입력값을 기반으로 HSV 색상 모델의 Hue(색상 각도)**로 변환되며,  
+  **Hue 0°~300° 범위**를 따라 **빨강 → 초록 → 파랑**의 연속적인 색상이 자연스럽게 변화합니다.
+
 
 ---
 
